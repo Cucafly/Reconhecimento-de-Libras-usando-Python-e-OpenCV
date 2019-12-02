@@ -20,3 +20,201 @@ Estas letras podem ser analisadas em uma função diferente, semelhante a funç�
 Letra T: para o dedo polegar, devido a estar sobreposto pelo dedo indicador, o algoritmo não reconhece os pontos da ponta do dedo. Letra N e U se confundem
 
 Obs.: o algoritmo ainda está sendo aperfeiçoado.
+
+
+
+# Etapa 1 - Importando as bibliotecas
+import sys
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import zipfile
+from google.colab.patches import cv2_imshow
+cv2.__version__
+
+# Etapa 2 - Conectando com o Drive
+from google.colab import drive
+drive.mount('/content/drive')
+Go to this URL in a browser: https://accounts.google.com/o/oauth2/auth?client_id=947318989803-6bn6qk8qdgf4n4g3pfee6491hc0brc4i.apps.googleusercontent.com&redirect_uri=urn%3aietf%3awg%3aoauth%3a2.0%3aoob&response_type=code&scope=email%20https%3a%2f%2fwww.googleapis.com%2fauth%2fdocs.test%20https%3a%2f%2fwww.googleapis.com%2fauth%2fdrive%20https%3a%2f%2fwww.googleapis.com%2fauth%2fdrive.photos.readonly%20https%3a%2f%2fwww.googleapis.com%2fauth%2fpeopleapi.readonly
+
+pose_path = "/content/drive/My Drive/pose.zip"
+zip_object = zipfile.ZipFile(file=pose_path, mode="r")
+zip_object.extractall("./")
+
+imagens_path = "/content/drive/My Drive/imagens.zip"
+zip_object = zipfile.ZipFile(file=imagens_path, mode="r")
+zip_object.extractall("./")
+
+modulos_path = "/content/drive/My Drive/modulos.zip"
+zip_object = zipfile.ZipFile(file=modulos_path, mode="r")
+zip_object.extractall("./")
+zip_object.close()
+
+# Etapa 3 - Importando os módulos
+sys.path.append("/content/modulos/")
+sys.path
+
+import extrator_POSICAO as posicao
+import extrator_ALTURA as altura
+import extrator_PROXIMIDADE as proximidade
+import alfabeto
+
+# Etapa 4 - Carregando o modelo e estruturas da rede neural pré-treinada
+arquivo_proto = "/content/pose/hand/pose_deploy.prototxt"
+arquivo_pesos = "/content/pose/hand/pose_iter_102000.caffemodel"
+numero_pontos = 22
+pares_poses = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], 
+              [0, 9], [9, 10], [10, 11], [11, 12], [0, 13], [13, 14], [14, 15],
+              [15, 16], [0, 17], [17, 18], [18, 19], [19, 20]]
+              
+letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'I', 'L', 'M', 'N', 'O', 'P', 'Q',
+          'R', 'S', 'T', 'U', 'V', 'W']
+          
+# Etapa 5 - Ler o modelo carregado na Etapa 3
+modelo = cv2.dnn.readNetFromCaffe(arquivo_proto, arquivo_pesos)
+
+# Etapa 6 - Carregando uma imagem do Drive
+imagem = cv2.imread("/content/imagens/hand/Libras/A.JPG")
+cv2_imshow(imagem)
+
+imagem_copia = np.copy(imagem)
+imagem_largura = imagem.shape[1]
+imagem_altura = imagem.shape[0]
+proporcao = imagem_largura / imagem_altura
+imagem_largura, imagem_altura, proporcao
+
+cor_pontoA, cor_pontoB, cor_linha = (14, 201, 255), (255, 0, 128), (192, 192, 192)
+cor_txtponto = (10, 216, 245)
+
+tamanho_fonte, tamanho_linha, tamanho_circulo, espessura = 5, 1, 4, 2
+
+fonte = cv2.FONT_HERSHEY_SIMPLEX
+
+# Etapa 7 - Definir as dimensões da imagem de entrada
+entrada_altura = 256
+entrada_largura = int(((proporcao * entrada_altura) * 8) // 8)
+entrada_altura, entrada_largura
+
+# Etapa 8 - Converter a imagem do formato openCV para o formato blob Caffe
+entrada_blob = cv2.dnn.blobFromImage(imagem, 1.0 / 255, 
+                                     (entrada_largura, entrada_altura), 
+                                     (0, 0, 0), swapRB=False, crop=False)
+                                     
+# Etapa 9 - Saída
+modelo.setInput(entrada_blob)
+saida = modelo.forward()
+saida.shape
+
+# Etapa 10 - Plotando as saídas na imagem
+pontos = []
+limite = 0.1
+for i in range(numero_pontos):
+    mapa_confianca = saida[0, i, :, :]
+    mapa_confianca = cv2.resize(mapa_confianca, (imagem_largura, imagem_altura))
+
+    _, confianca, _, ponto = cv2.minMaxLoc(mapa_confianca)
+
+    if confianca > limite:
+        cv2.circle(imagem_copia, (int(ponto[0]), int(ponto[1])), 5, cor_pontoA, 
+                   thickness=espessura, lineType=cv2.FILLED)
+        cv2.putText(imagem_copia, ' ' + (str(int(ponto[0]))) + ',' + 
+                    str(int(ponto[1])), (int(ponto[0]), int(ponto[1])),
+                    fonte, 0.3, cor_txtponto, 0, lineType=cv2.LINE_AA)
+
+        cv2.circle(imagem, (int(ponto[0]), int(ponto[1])), tamanho_circulo,
+                   cor_pontoA,
+                   thickness=espessura, lineType=cv2.FILLED)
+        cv2.putText(imagem, ' ' + "{}".format(i), (int(ponto[0]), 
+                                                  int(ponto[1])), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.3,
+                    cor_txtponto,
+                    0, lineType=cv2.LINE_AA)
+
+        pontos.append((int(ponto[0]), int(ponto[1])))
+
+    else:
+        pontos.append((0, 0))
+        
+ len(pontos)
+ pontos
+ cv2_imshow(imagem_copia)
+ 
+ # Etapa 11 - Desenhar o esqueleto: quando temos os pontos chave, apenas juntamos os pares
+ for par in pares_poses:
+    parteA = par[0]
+    parteB = par[1]
+
+    if pontos[parteA] != (0, 0) and pontos[parteB] != (0, 0):
+        cv2.line(imagem_copia, pontos[parteA], pontos[parteB], cor_linha, 
+                 tamanho_linha, lineType=cv2.LINE_AA)
+        cv2.line(imagem, pontos[parteA], pontos[parteB], cor_linha, tamanho_linha, 
+                 lineType=cv2.LINE_AA)
+                 
+ cv2_imshow(imagem_copia)
+ 
+ # Etapa 12 - Verificar posição dos dedos e da mão
+ Usar a função verificar_posicao_DEDOS para verificar se os dedos estão dobrados, estidados na vertical ou esticados na hoprizontal.
+
+Parâmetros das funções:
+
+> Passamos como parâmetro para a função, o vetor de pontos detectados, limitando as articulações de cada dedo da mão. 
+
+> A função verificar_altura_MAO, verifica se a posição da mão está voltada para cima ou para baixo
+
+
+*   Pontos do 1 ao 5, correspondem ao dedo polegar
+** Para o dedo polegar, precisa de uma verificação adicional para saber se está esticado ou dobrado comparando a diferença dos pontos na vertical e na horizontal
+*   Pontos do 5 ao 9, correspondem ao dedo indicador
+*   Pontos do 9 ao 13, correspondem ao dedo médio
+*   Pontos do 13 ao 17, correspondem ao dedo anelar
+*   Pontos do 17 ao 21, correspondem ao dedo mínimo
+
+posicao.posicoes = []
+
+# Dedo polegar
+posicao.verificar_posicao_DEDOS(pontos[1:5], 'polegar', altura.verificar_altura_MAO(pontos))
+
+# Dedo indicador
+posicao.verificar_posicao_DEDOS(pontos[5:9], 'indicador', altura.verificar_altura_MAO(pontos))
+
+# Dedo médio
+posicao.verificar_posicao_DEDOS(pontos[9:13], 'medio', altura.verificar_altura_MAO(pontos))
+
+# Dedo anelar
+posicao.verificar_posicao_DEDOS(pontos[13:17], 'anelar', altura.verificar_altura_MAO(pontos))
+
+# Dedo mínimo
+posicao.verificar_posicao_DEDOS(pontos[17:21], 'minimo', altura.verificar_altura_MAO(pontos))
+
+posicao.posicoes
+
+# Etapa 13 - Verificar a proximidade entre os dedos
+
+Após verificar se os dedos estão dobrados ou esticados, vericamos a proximidade entre os dedos com a função verificar_proximidade_DEDOS
+
+Esta função faz a verificação da proximidade entre dedos, 
+comparando se os dedos estão lado a lado e se estão na mesma posição (esticados ou dobrados).
+
+Se forem iguais, então significa que estão próximos.
+
+> Recebe como parâmetro todo o vetor de pontos
+
+> Na função verificar_proximidade_DEDOS, para cada variável que corresponde as articulações dos dedos, não foram utilizados os nomes "científicos"
+
+> O resultado será o vetor de características de todos os dedos da mão
+
+p = proximidade.verificar_proximidade_DEDOS(pontos)
+p
+
+# Etapa 14 - Comparando as características
+for i, a in enumerate(alfabeto.letras):
+  if proximidade.verificar_proximidade_DEDOS(pontos) == alfabeto.letras[i]:
+    cv2.putText(imagem, ' ' + letras[i], (50,50), fonte, 1, cor_txtponto,
+                tamanho_fonte, lineType=cv2.LINE_AA)
+                
+# Etapa 15 - Exibindo as saídas
+plt.figure(figsize= [14,10])
+plt.imshow(cv2.cvtColor(imagem, cv2.COLOR_BGR2RGB))
+
+
+
