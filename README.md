@@ -1,4 +1,8 @@
 # Reconhecimento-de-Libras-usando-Python-e-OpenCV
+
+# Instruções
+# As linhas de codigo abaixo deverão ser executadas no Google Colab. Primeiro salve os arquivos no seu Google Drive. Depois, crie um diretório. Obs.: os "paths" deverão ser os mesmos criados e não os indicados nas linhas de código abaixo.
+
 Mão - Traduzindo Libras em imagens
 
 Para a identificação mais dinâmica de várias posições, foram desenvolvidos 4 módulos para extrair algumas caracteríscas e comparar o deslocamento das articulações (pontos chave)
