@@ -1,26 +1,26 @@
-# Reconhecimento-de-Libras-usando-Python-e-OpenCV
+# Libras-Recognition-using-Python-and-OpenCV
 
-# Instruções
-# As linhas de codigo abaixo deverão ser executadas no Google Colab. Primeiro salve os arquivos no seu Google Drive. Depois, crie um diretório. Obs.: os "paths" deverão ser os mesmos criados e não os indicados nas linhas de código abaixo.
+# Instructions
+# The lines of code below must be executed in Google Colab. First save the files to your Google Drive. Then, create a directory. Obs .: the paths must be the same ones created and not the ones indicated in the lines of code below.
 
-Mão - Traduzindo Libras em imagens
+Hand - Translating Libras into images
 
-Para a identificação mais dinâmica de várias posições, foram desenvolvidos 4 módulos para extrair algumas caracteríscas e comparar o deslocamento das articulações (pontos chave)
+For the more dynamic identification of various positions, 4 modules were developed to extract some characteristics and compare the displacement of the joints (key points)
 
-Extraimos a ALTURA, POSIÇÃO e PROXIMIDADE entre os pontos chave detectados
+We extract HEIGHT, POSITION and PROXIMITY between the detected key points
 
-Módulo extrator_ALTURA: verifica se um ponto está 'acima' ou 'abaixo' de outro ponto específico. Por exemplo, se a ponta do dedo está 'acima' do punho     
+Module extrator_ALTURA: checks if a point is 'above' or 'below' another specific point. For example, if the fingertip is 'above' the wrist
 
-Módulo extrator_POSICAO: funções para verificar se os dedos estão 'dobrados' ou 'esticados', na posição horizontal ou na vertical. Também recebe o resultado do módulo extrator_ALTURA para saber em que posição a mão está (voltada 'acima' ou 'abaixo')         
+Extrator_POSICAO module: functions to check if the fingers are 'bent' or 'stretched', horizontally or vertically. It also receives the result of the extractor_ALTURA module to know what position the hand is in (turned 'up' or 'down')
 
-Módulo extrator_PROXIMIDADE: funções que comparam a proximidade entre os pontos chaves detectados. Por exemplo, se o resultado do módulo extrator_POSICAO for igual a 'dobrado' para o dedo indicador e dedo médio e ambos estiverem na mesma altura, então significa que os dedos estão próximos         
+Extractor_PROXIMITY module: functions that compare the proximity between the detected key points. For example, if the result of the extractor_POSICAO module is equal to 'folded' for the index and middle fingers and both are at the same height, then it means that the fingers are close
 
-Módulo alfabeto: após extrair todas estas características, foi criado o alfabeto de características, onde um VETOR DE VETORES recebe o resultado de todos os módulos extratores. Assim usamos este módulo para comparar com uma nova análise (nova imagem) de entrada              
+Alphabet module: after extracting all these characteristics, the characteristics alphabet was created, where a VECTOR OF VECTORS receives the result of all the extractor modules. So we use this module to compare with a new analysis (new image) of input
 
-Não foram usadas as letras: H, J, K, X, ,Y , Z devido ao movimento adicional para a execução correta das letras.             
+The letters: H, J, K, X,, Y, Z were not used due to the additional movement for the correct execution of the letters.
 
-Estas letras podem ser analisadas em uma função diferente, semelhante a função de análise de posicionamento do corpo, onde comparamos a transição entre pontos              
+These letters can be analyzed in a different function, similar to the body position analysis function, where we compare the transition between points
 
-Letra T: para o dedo polegar, devido a estar sobreposto pelo dedo indicador, o algoritmo não reconhece os pontos da ponta do dedo. Letra N e U se confundem
+Letter T: for the thumb, due to being overlapped by the index finger, the algorithm does not recognize the points on the fingertip. Letter N and U are confused
 
-Obs.: o algoritmo ainda está sendo aperfeiçoado.
+Note: the algorithm is still being improved.
